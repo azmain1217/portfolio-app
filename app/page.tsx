@@ -103,7 +103,7 @@ export default function Home() {
           background: `radial-gradient(600px at ${mousePos.x}px ${mousePos.y}px, rgba(45, 212, 191, 0.07), transparent 80%)`
         }}
       />
-      <div className="mx-auto max-w-7xl px-6 pt-32 md:px-12 md:pt-36 lg:px-24 lg:pt-28">
+      <div className="mx-auto max-w-7xl px-6 pt-32 pb-32 md:px-12 md:pt-36 md:pb-36 lg:px-24 lg:pt-28 lg:pb-28">
         <div
           className={`fixed inset-x-0 left-1/2 top-4 z-20 mx-auto w-full max-w-7xl -translate-x-1/2 overflow-visible rounded-3xl bg-slate-950/90 px-5 py-4 transition-all duration-300 ease-out md:px-10 lg:px-5 lg:py-3 ${showStickyHeaderBg ? 'bg-transparent backdrop-blur-none' : 'bg-transparent backdrop-blur-none'}`}
           onMouseEnter={() => showStickyHeaderBg && setIsStickyHovered(true)}
@@ -305,6 +305,9 @@ export default function Home() {
               </div>
             </section>
           </main>
+        </div>
+        <div className="mt-16 border-t border-slate-800 pt-8 text-center text-xs uppercase tracking-[0.3em] text-slate-500">
+          © 2026 Syed Azmain. All rights reserved.
         </div>
       </div>
       <button
