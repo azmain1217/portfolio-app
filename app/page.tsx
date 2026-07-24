@@ -14,7 +14,15 @@ export default function Home() {
   const [isStickyHovered, setIsStickyHovered] = useState(false);
   const [stickyHoverPos, setStickyHoverPos] = useState({ x: 0, y: 0 });
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const timelineLineRef = useRef<HTMLDivElement | null>(null);
   const sectionOptions = ['About', 'Experience', 'Education', 'Projects'];
+  const sectionIds = ['about', 'experience', 'education', 'projects'];
+  const sectionLabels: Record<string, string> = {
+    about: 'About',
+    experience: 'Experience',
+    education: 'Education',
+    projects: 'Projects',
+  };
 
   useEffect(() => {
     const updateMouse = (e: MouseEvent) => {
@@ -46,6 +54,36 @@ export default function Home() {
     return () => window.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const updateTimelineLine = () => {
+      const line = timelineLineRef.current;
+      const list = line?.parentElement;
+
+      if (!line || !list) return;
+
+      const firstMarker = list.querySelector('[data-timeline-marker="first"]') as HTMLElement | null;
+      const lastCard = list.querySelector('[data-timeline-card="last"]') as HTMLElement | null;
+
+      if (!firstMarker || !lastCard) return;
+
+      const listRect = list.getBoundingClientRect();
+      const startY = firstMarker.getBoundingClientRect().top - listRect.top + firstMarker.offsetHeight / 2;
+      const endY = lastCard.getBoundingClientRect().bottom - listRect.top;
+      const height = Math.max(0, endY - startY);
+
+      line.style.top = `${startY}px`;
+      line.style.height = `${height}px`;
+    };
+
+    updateTimelineLine();
+    window.addEventListener('resize', updateTimelineLine);
+    window.addEventListener('scroll', updateTimelineLine, { passive: true });
+
+    return () => {
+      window.removeEventListener('resize', updateTimelineLine);
+      window.removeEventListener('scroll', updateTimelineLine);
+    };
+  }, []);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -57,43 +95,42 @@ export default function Home() {
   const scrollToSection = (id: string) => {
     const section = document.getElementById(id.toLowerCase());
     if (section) {
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const top = section.getBoundingClientRect().top + window.scrollY - 96;
+      window.scrollTo({ top, behavior: 'smooth' });
       setShowSectionDropdown(false);
     }
   };
 
   useEffect(() => {
-    const sectionLabels: Record<string, string> = {
-      about: 'About',
-      experience: 'Experience',
-      education: 'Education',
-      projects: 'Projects',
+    const updateActiveSection = () => {
+      const scrollPosition = window.scrollY + 140;
+      const visibleSections = sectionIds
+        .map(id => {
+          const section = document.getElementById(id);
+          return {
+            id,
+            top: section ? section.offsetTop : Number.POSITIVE_INFINITY,
+          };
+        })
+        .filter(section => section.top <= scrollPosition)
+        .sort((a, b) => b.top - a.top);
+
+      if (visibleSections.length > 0) {
+        setActiveSection(sectionLabels[visibleSections[0].id] ?? 'About');
+      } else {
+        setActiveSection('About');
+      }
     };
 
-    const observer = new IntersectionObserver(
-      entries => {
-        const visible = entries
-          .filter(entry => entry.isIntersecting)
-          .sort((a, b) => b.boundingClientRect.top - a.boundingClientRect.top);
+    updateActiveSection();
+    window.addEventListener('scroll', updateActiveSection, { passive: true });
+    window.addEventListener('resize', updateActiveSection);
 
-        if (visible.length > 0) {
-          setActiveSection(sectionLabels[visible[0].target.id] ?? 'About');
-        }
-      },
-      {
-        root: null,
-        rootMargin: '0px 0px -70% 0px',
-        threshold: 0.1,
-      }
-    );
-
-    ['about', 'experience', 'education', 'projects'].forEach(id => {
-      const section = document.getElementById(id);
-      if (section) observer.observe(section);
-    });
-
-    return () => observer.disconnect();
-  }, []);
+    return () => {
+      window.removeEventListener('scroll', updateActiveSection);
+      window.removeEventListener('resize', updateActiveSection);
+    };
+  }, [sectionIds, sectionLabels]);
 
   return (
     <div className="relative min-h-screen bg-slate-900 font-sans text-slate-400 antialiased selection:bg-teal-300 selection:text-slate-900">
@@ -200,40 +237,52 @@ export default function Home() {
               <h2 className="mb-8 text-sm font-semibold uppercase text-slate-200">
                 Experience
               </h2>
-              <ol className="group/list space-y-12">
-                {experienceData.map((item, idx) => (
+              <ol className="group/list relative space-y-8 sm:space-y-10">
+                <div ref={timelineLineRef} className="pointer-events-none absolute left-[0.7rem] hidden w-px bg-slate-700/70 sm:block" />
+                {experienceData.map((item, idx) => {
+                  const isFirstItem = idx === 0;
+                  const isLastItem = idx === experienceData.length - 1;
+
+                  return (
                   <li
                     key={idx}
-                    className="group relative grid pb-1 transition-all sm:grid-cols-10 sm:gap-10 md:gap-4"
+                    className="group relative grid pb-1 transition-all sm:grid-cols-[112px_minmax(0,1fr)] sm:gap-8 md:grid-cols-[128px_minmax(0,1fr)] md:gap-10"
                   >
-                    {/*Date Column*/}
-                    <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500 sm:col-span-3">
-                      {item.dateRange}
-                    </header>
+                    <div className="relative mb-3 sm:mb-0">
+                      <div className="relative flex items-center gap-2 py-2 pl-6">
+                        <span
+                          data-timeline-marker={isFirstItem ? 'first' : undefined}
+                          className="group-hover:before:opacity-100 absolute left-[0.7rem] top-1/2 z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-teal-300/80 bg-slate-900 shadow-[0_0_0_3px_rgba(15,23,42,0.95)] before:absolute before:inset-[2px] before:rounded-full before:bg-teal-300 before:opacity-0 before:transition-opacity before:content-['']"
+                        />
+                        <header className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          {item.dateRange}
+                        </header>
+                      </div>
+                    </div>
 
-                    {/* Card Content Column*/}
-                    <div className="z-10 sm:col-span-7 rounded-3xl border border-slate-800 bg-slate-950/50 p-6 shadow-xl shadow-slate-950/10 transition hover:border-teal-300/50 hover:bg-slate-900/80">
+                    <div
+                      data-timeline-card={isLastItem ? 'last' : undefined}
+                      className="relative z-10 rounded-3xl border border-slate-800 bg-slate-950/50 p-6 shadow-xl shadow-slate-950/10 transition hover:border-teal-300/50 hover:bg-slate-900/80"
+                    >
                       <h3 className="font-medium leading-snug text-slate-200">
                         <div>
                           <span className="inline-flex items-baseline max-w-full whitespace-normal wrap-break-word font-medium leading-tight text-slate-200 group-hover:text-teal-300 transition-colors text-base">
                             {item.title} · {item.company}
                           </span>
                         </div>
-                        <div className="text-xs text-slate-500 font-normal mt-0.5">
+                        <div className="mt-0.5 text-xs font-normal text-slate-500">
                           {item.location}
                         </div>
                       </h3>
 
-                      {/* Bullet list description block*/}
-                      <ul className="mt-4 space-y-2.5 text-sm leading-normal list-none pl-0 text-slate-400">
+                      <ul className="mt-4 list-none space-y-2.5 pl-0 text-sm leading-normal text-slate-400">
                         {item.bullets.map((bullet, bIdx) => (
-                          <li className="flex items-start gap-2 before:inline-block before:mt-0.5 before:text-teal-300 before:content-['▹']" key={bIdx}>
+                          <li className="flex items-start gap-2 before:mt-0.5 before:inline-block before:text-teal-300 before:content-['▹']" key={bIdx}>
                             {bullet}
                           </li>
                         ))}
                       </ul>
 
-                      {/* Flex Skill Tag Pills*/}
                       <ul className="mt-6 flex flex-wrap gap-2" aria-label="Technologies used">
                         {item.skills.map((skill, sIdx) => (
                           <li className="flex items-center rounded-full bg-teal-400/10 px-3 py-1 text-xs font-medium leading-5 text-teal-300" key={sIdx}>{skill}</li>
@@ -241,7 +290,8 @@ export default function Home() {
                       </ul>
                     </div>
                   </li>
-                ))}
+                  );
+                })}
               </ol>
             </section>
             <section id="education" className="mt-16">
