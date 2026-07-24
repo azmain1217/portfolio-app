@@ -204,7 +204,7 @@ export default function Home() {
                 {experienceData.map((item, idx) => (
                   <li
                     key={idx}
-                    className="group relative grid pb-1 transition-all sm:grid-cols-10 sm:gap-10 md:gap-4 lg:hover:opacity-100! lg:group-hover/list:opacity-50"
+                    className="group relative grid pb-1 transition-all sm:grid-cols-10 sm:gap-10 md:gap-4"
                   >
                     {/*Date Column*/}
                     <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500 sm:col-span-3">
@@ -212,7 +212,7 @@ export default function Home() {
                     </header>
 
                     {/* Card Content Column*/}
-                    <div className="z-10 sm:col-span-7">
+                    <div className="z-10 sm:col-span-7 rounded-3xl border border-slate-800 bg-slate-950/50 p-6 shadow-xl shadow-slate-950/10 transition hover:border-teal-300/50 hover:bg-slate-900/80">
                       <h3 className="font-medium leading-snug text-slate-200">
                         <div>
                           <span className="inline-flex items-baseline max-w-full whitespace-normal wrap-break-word font-medium leading-tight text-slate-200 group-hover:text-teal-300 transition-colors text-base">
@@ -249,23 +249,42 @@ export default function Home() {
                 Education
               </h2>
               <div className="space-y-6">
-                {educationData.map((item, idx) => (
-                  <article
-                    key={idx}
-                    className="rounded-3xl border border-slate-800 bg-slate-950/50 p-6 shadow-xl shadow-slate-950/10"
-                  >
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <p className="text-base font-semibold text-slate-200">{item.schoolName}</p>
-                        <p className="mt-2 text-sm text-slate-400">{item.degreeMajor}</p>
+                {educationData.map((item, idx) => {
+                  const isBrooklyn = item.schoolName.includes('Brooklyn College');
+                  const card = (
+                    <article
+                      className="rounded-3xl border border-slate-800 bg-slate-950/50 p-6 shadow-xl shadow-slate-950/10 transition hover:border-teal-300/50 hover:bg-slate-900/80"
+                    >
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <p className="text-base font-semibold text-slate-200">{item.schoolName}</p>
+                          <p className="mt-2 text-sm text-slate-400">{item.degreeMajor}</p>
+                        </div>
+                        <p className="text-sm uppercase tracking-[0.25em] text-slate-500">{item.graduationYear}</p>
                       </div>
-                      <p className="text-sm uppercase tracking-[0.25em] text-slate-500">{item.graduationYear}</p>
-                    </div>
-                    <p className="mt-4 text-sm text-slate-400">{item.location}</p>
-                  </article>
-                ))}
+                      <p className="mt-4 text-sm text-slate-400">{item.location}</p>
+                    </article>
+                  );
+
+                  return isBrooklyn ? (
+                    <a
+                      key={idx}
+                      href="https://www.brooklyn.edu"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block no-underline"
+                    >
+                      {card}
+                    </a>
+                  ) : (
+                    <div key={idx}>{card}</div>
+                  );
+                })}
               </div>
             </section>
+
+            {/* 
+            COMMENTED PROJECTS UNTIL PROJECTS HAVE BEEN CREATED AND READY TO GO.
             <section id="projects" className="mt-16">
               <h2 className="mb-8 text-sm font-semibold uppercase text-slate-200">
                 Projects
@@ -303,7 +322,7 @@ export default function Home() {
                   </article>
                 ))}
               </div>
-            </section>
+            </section> */}
           </main>
         </div>
         <div className="mt-16 border-t border-slate-800 pt-8 text-center text-xs uppercase tracking-[0.3em] text-slate-500">
